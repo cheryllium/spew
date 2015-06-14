@@ -51,14 +51,13 @@
     (list :content html)))
 
 (defun cols-identifier () 
-  (setf *col-id* (+ 1 *col-id*))
-  *col-id*)
+  (incf *col-id*))
+
 (defun rows-identifier () 
-  (setf *row-id* (+ 1 *row-id*))
-  *row-id*)
+  (incf *row-id*))
+
 (defun custom-identifier () 
-  (setf *custom-id* (+ 1 *custom-id*))
-  *custom-id*)
+  (incf *custom-id*))
 
 (defun cols-html (cols-list) 
   (format nil "<div id='col-container-~a'>~%~{~a~%~}</div><div style='clear:both;'></div>" 
