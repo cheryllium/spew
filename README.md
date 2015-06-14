@@ -1,5 +1,5 @@
 # spew
-easy web scaffolding with lisp | scaffold parenthetically for easy webpages
+easy webpage scaffolding with lisp | scaffold parenthetically for easy webpages
 
 ## what it does 
 
