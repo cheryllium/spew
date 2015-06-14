@@ -16,8 +16,8 @@
 (defun simple-div-html (x) 
   (let ((css (getf x :styles)))
     (if css 
-	(progn 
-	  (setf *running-css* (cons (simple-div-css css) *running-css*))
+	(progn
+          (push (simple-div-css css) *running-css*)
 	  (format nil "<div id='custom-div-~a'>~a</div>" 
 		  *custom-id*
 		  (getf x :content)))
@@ -41,13 +41,13 @@
 (defun cols (cols-list) 
   (let ((html (cols-html cols-list))
 	(css (cols-css cols-list)))
-    (setf *running-css* (cons css *running-css*))
+    (push css *running-css*)
     (list :content html)))
 
 (defun rows (rows-list)
   (let ((html (rows-html rows-list))
 	(css (rows-css rows-list)))
-    (setf *running-css* (cons css *running-css*))
+    (push css *running-css*)
     (list :content html)))
 
 (defun cols-identifier () 
