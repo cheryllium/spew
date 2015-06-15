@@ -33,7 +33,16 @@ which is obtained or defaulted."
        (default-spewer)))
 
 
-;;; Simple things
+;;; Composition functions
+
+(defun cols-identifier (&optional self) 
+  (incf (col-id (or self (default-spewer)))))
+
+(defun rows-identifier (&optional self) 
+  (incf (row-id (or self (default-spewer)))))
+
+(defun custom-identifier (&optional self)
+  (incf (custom-id (or self (default-spewer)))))
 
 (defun simple-div-css (self css) 
   (format nil "#custom-div-~a { ~a }" 
@@ -45,14 +54,67 @@ which is obtained or defaulted."
     (if css 
 	(progn
           (push (simple-div-css self css) (running-css self))
+          ;; (format t "running-css: ~S~%" (running-css self))
 	  (format nil "<div id='custom-div-~a'>~a</div>" 
 		  (custom-id self)
 		  (getf x :content)))
 	(format nil "<div>~a</div>" 
 		(getf x :content)))))
 
+(defun cols-html (self cols-list)
+  (format nil "<div id='col-container-~a'>~%~{~a~%~}</div><div style='clear:both;'></div>" 
+	  (cols-identifier self)
+	  (mapcar (lambda (elt)
+                    (simple-div-html self elt))
+                  cols-list)))
+
+(defun rows-html (self rows-list) 
+  (format nil "<div id='row-container-~a'>~%~{~a~%~}</div>" 
+	  (rows-identifier self)
+	  (mapcar (lambda (elt)
+                    (simple-div-html self elt))
+                  rows-list)))
+
+(defun cols-css (self cols-list) 
+  (format nil "#~a>div {~%float:left;box-sizing:border-box;~%border:1px solid #000;~%width: ~a%;~%}" 
+	  (format nil "col-container-~a" (col-id self))
+	  (floor 100 (length cols-list))))
+
+(defun rows-css (self rows-list) 
+  (format nil "#~a>div {~%width:100%;box-sizing:border-box;~%border:1px solid #000;~%height: ~a%;~%}" 
+	  (format nil "row-container-~a" (row-id self))
+	  (floor 100 (length rows-list))))
+
+(defun cols (&rest args)
+  (let* ((self (first-or-default-spewer args))
+         (cols-list (first args))
+         (html (cols-html self cols-list))
+         (css (cols-css self cols-list)))
+    ;; (format t "(list self cols-list html css): ~A~%" (list self cols-list html css))
+    (push css (running-css self))
+    (list :content html)))
+
+(defun rows (&rest args)
+  (let* ((self (first-or-default-spewer args))
+         (rows-list (first args))
+         (html (rows-html self rows-list))
+         (css (rows-css self rows-list)))
+    ;; (format t "(list self rows-list html css): ~A~%" (list self rows-list html css))
+    (push css (running-css self))
+    (list :content html)))
+
 
 ;;; Output functions
+
+(defun write-output (html-content &key spewer css-stream html-stream)
+  (let ((self (or spewer (default-spewer)))
+        (defaulted (null spewer)))
+    (format css-stream "~{~a~%~}" (reverse (running-css self)))
+    (format html-stream
+            "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
+            (getf html-content :content))
+    (when defaulted
+      (setf (default-spewer) nil))))
 
 (defun write-files (html-content &key spewer css-file html-file)
   (with-open-file (css-stream css-file
@@ -81,68 +143,23 @@ which is obtained or defaulted."
                       :html-stream html-stream)))
     (values html-string css-string)))
 
-(defun write-output (html-content &key spewer css-stream html-stream)
-  (let ((self (or spewer (default-spewer)))
-        (defaulted (null spewer)))
-    (format css-stream "~{~a~%~}" (reverse (running-css self)))
-    (format html-stream
-            "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
-            (getf html-content :content))
-    (when defaulted
-      (setf (default-spewer) nil))))
-
-
-;;; Composition functions
-
-(defun cols (cols-list)
-  (let* ((self (first-or-default-spewer cols-list))
-         (html (cols-html self cols-list))
-         (css (cols-css self cols-list)))
-    (push css (running-css self))
-    (list :content html)))
-
-(defun rows (rows-list)
-  (let* ((self (first-or-default-spewer rows-list))
-         (html (rows-html self rows-list))
-         (css (rows-css self rows-list)))
-    (push css (running-css self))
-    (list :content html)))
-
-(defun cols-identifier (&optional self) 
-  (incf (col-id (or self (default-spewer)))))
-
-(defun rows-identifier (&optional self) 
-  (incf (row-id (or self (default-spewer)))))
-
-(defun custom-identifier (&optional self)
-  (incf (custom-id (or self (default-spewer)))))
-
-(defun cols-html (self cols-list)
-  (format nil "<div id='col-container-~a'>~%~{~a~%~}</div><div style='clear:both;'></div>" 
-	  (cols-identifier self)
-	  (mapcar (lambda (elt)
-                    (simple-div-html self elt))
-                  cols-list)))
-
-(defun rows-html (self rows-list) 
-  (format nil "<div id='row-container-~a'>~%~{~a~%~}</div>" 
-	  (rows-identifier self)
-	  (mapcar (lambda (elt)
-                    (simple-div-html self elt))
-                  rows-list)))
-
-(defun cols-css (self cols-list) 
-  (format nil "#~a>div {~%float:left;box-sizing:border-box;~%border:1px solid #000;~%width: ~a%;~%}" 
-	  (format nil "col-container-~a" (col-id self))
-	  (floor 100 (length cols-list))))
-
-(defun rows-css (self rows-list) 
-  (format nil "#~a>div {~%width:100%;box-sizing:border-box;~%border:1px solid #000;~%height: ~a%;~%}" 
-	  (format nil "row-container-~a" (row-id self))
-	  (floor 100 (length rows-list))))
-
 
 ;;; Examples
+
+(defun example-strings-explicit-oo ()
+  (let ((spewer (make-instance 'spewer)))
+    (write-strings
+     (cols spewer 
+      (list 
+       (rows spewer
+        '((:content "Test div please ignore")
+          (:content "Second test div")))
+       (rows spewer
+        '((:content "Test div again"
+           :styles "background-color: #f00;")
+          (:content "Test div again")
+          (:content "Test div three")))))
+     :spewer spewer)))
 
 (defun example-strings () 
   (write-strings
