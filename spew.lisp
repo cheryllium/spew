@@ -44,19 +44,16 @@
                     :html-stream html-stream))))
 
 (defun write-strings (html-content)
-  (let ((html-string (make-array '(0) :element-type 'base-char
-                                      :fill-pointer 0 :adjustable t))
-        (css-string (make-array '(0) :element-type 'base-char
-                                     :fill-pointer 0 :adjustable t)))
-    (with-output-to-string (css-stream css-string)
-      (with-output-to-string (html-stream html-string)
-        (write-output html-content
-                      :css-stream css-stream
-                      :html-stream html-stream)))
-    (values html-string css-string)))
+  (let ((html-stream (make-string-output-stream))
+        (css-stream (make-string-output-stream)))
+    (write-output html-content
+                  :css-stream css-stream
+                  :html-stream html-stream)
+    (values (get-output-stream-string html-stream)
+            (get-output-stream-string css-stream))))
 
 (defun write-output (html-content &key css-stream html-stream)
-  (format css-stream "~{~a~%~}" *running-css*)
+  (format css-stream "~{~a~%~}" (reverse *running-css*))
   (format html-stream
           "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
           (getf html-content :content))
