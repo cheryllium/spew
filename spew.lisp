@@ -8,6 +8,12 @@
 
 (defparameter *running-css* nil)
 
+(defun reset-state ()
+  (setf *col-id* 0
+        *row-id* 0
+        *custom-id* 0
+        *running-css* nil))
+
 (defun simple-div-css (css) 
   (format nil "#custom-div-~a { ~a }" 
 	  (custom-identifier)
@@ -24,19 +30,20 @@
 	(format nil "<div>~a</div>" 
 		(getf x :content)))))
 
-(defun make-files (html-content) 
-    (with-open-file (stream "test.css"
-			    :direction :output 
-			    :if-does-not-exist :create
-			    :if-exists :overwrite)
-      (format stream "~{~a~%~}" *running-css*))
-    (with-open-file (stream "test.html" 
-			    :direction :output
-			    :if-does-not-exist :create
-			    :if-exists :overwrite) 
-      (format stream 
-	      "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
-	      (getf html-content :content))))
+(defun make-files (html-content)
+  (reset-state)
+  (with-open-file (stream "test.css"
+                          :direction :output 
+                          :if-does-not-exist :create
+                          :if-exists :overwrite)
+    (format stream "~{~a~%~}" *running-css*))
+  (with-open-file (stream "test.html" 
+                          :direction :output
+                          :if-does-not-exist :create
+                          :if-exists :overwrite) 
+    (format stream 
+            "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
+            (getf html-content :content))))
 
 (defun cols (cols-list) 
   (let ((html (cols-html cols-list))
