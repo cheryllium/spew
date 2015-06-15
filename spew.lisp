@@ -8,6 +8,12 @@
 
 (defparameter *running-css* nil)
 
+(defun reset-state ()
+  (setf *col-id* 0
+        *row-id* 0
+        *custom-id* 0
+        *running-css* nil))
+
 (defun simple-div-css (css) 
   (format nil "#custom-div-~a { ~a }" 
 	  (custom-identifier)
@@ -16,49 +22,49 @@
 (defun simple-div-html (x) 
   (let ((css (getf x :styles)))
     (if css 
-	(progn 
-	  (setf *running-css* (cons (simple-div-css css) *running-css*))
+	(progn
+          (push (simple-div-css css) *running-css*)
 	  (format nil "<div id='custom-div-~a'>~a</div>" 
 		  *custom-id*
 		  (getf x :content)))
 	(format nil "<div>~a</div>" 
 		(getf x :content)))))
 
-(defun make-files (html-content) 
-    (with-open-file (stream "test.css"
-			    :direction :output 
-			    :if-does-not-exist :create
-			    :if-exists :overwrite)
-      (format stream "~{~a~%~}" *running-css*))
-    (with-open-file (stream "test.html" 
-			    :direction :output
-			    :if-does-not-exist :create
-			    :if-exists :overwrite) 
-      (format stream 
-	      "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
-	      (getf html-content :content))))
+(defun make-files (html-content)
+  (reset-state)
+  (with-open-file (stream "test.css"
+                          :direction :output 
+                          :if-does-not-exist :create
+                          :if-exists :overwrite)
+    (format stream "~{~a~%~}" *running-css*))
+  (with-open-file (stream "test.html" 
+                          :direction :output
+                          :if-does-not-exist :create
+                          :if-exists :overwrite) 
+    (format stream 
+            "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
+            (getf html-content :content))))
 
 (defun cols (cols-list) 
   (let ((html (cols-html cols-list))
 	(css (cols-css cols-list)))
-    (setf *running-css* (cons css *running-css*))
+    (push css *running-css*)
     (list :content html)))
 
 (defun rows (rows-list)
   (let ((html (rows-html rows-list))
 	(css (rows-css rows-list)))
-    (setf *running-css* (cons css *running-css*))
+    (push css *running-css*)
     (list :content html)))
 
 (defun cols-identifier () 
-  (setf *col-id* (+ 1 *col-id*))
-  *col-id*)
+  (incf *col-id*))
+
 (defun rows-identifier () 
-  (setf *row-id* (+ 1 *row-id*))
-  *row-id*)
+  (incf *row-id*))
+
 (defun custom-identifier () 
-  (setf *custom-id* (+ 1 *custom-id*))
-  *custom-id*)
+  (incf *custom-id*))
 
 (defun cols-html (cols-list) 
   (format nil "<div id='col-container-~a'>~%~{~a~%~}</div><div style='clear:both;'></div>" 
