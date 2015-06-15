@@ -31,7 +31,6 @@
 		(getf x :content)))))
 
 (defun make-files (html-content)
-  (reset-state)
   (with-open-file (stream "test.css"
                           :direction :output 
                           :if-does-not-exist :create
@@ -43,7 +42,8 @@
                           :if-exists :overwrite) 
     (format stream 
             "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
-            (getf html-content :content))))
+            (getf html-content :content)))
+  (reset-state))
 
 (defun cols (cols-list) 
   (let ((html (cols-html cols-list))
