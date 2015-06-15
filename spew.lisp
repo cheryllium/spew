@@ -30,19 +30,36 @@
 	(format nil "<div>~a</div>" 
 		(getf x :content)))))
 
-(defun make-files (html-content)
-  (with-open-file (stream "test.css"
+(defun write-files (html-content &key css-file html-file)
+  (with-open-file (css-stream css-file
                           :direction :output 
                           :if-does-not-exist :create
                           :if-exists :overwrite)
-    (format stream "~{~a~%~}" *running-css*))
-  (with-open-file (stream "test.html" 
-                          :direction :output
-                          :if-does-not-exist :create
-                          :if-exists :overwrite) 
-    (format stream 
-            "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
-            (getf html-content :content)))
+    (with-open-file (html-stream html-file 
+                            :direction :output
+                            :if-does-not-exist :create
+                            :if-exists :overwrite) 
+      (write-output html-content
+                    :css-stream css-stream
+                    :html-stream html-stream))))
+
+(defun write-strings (html-content)
+  (let ((html-string (make-array '(0) :element-type 'base-char
+                                      :fill-pointer 0 :adjustable t))
+        (css-string (make-array '(0) :element-type 'base-char
+                                     :fill-pointer 0 :adjustable t)))
+    (with-output-to-string (css-stream css-string)
+      (with-output-to-string (html-stream html-string)
+        (write-output html-content
+                      :css-stream css-stream
+                      :html-stream html-stream)))
+    (values html-string css-string)))
+
+(defun write-output (html-content &key css-stream html-stream)
+  (format css-stream "~{~a~%~}" *running-css*)
+  (format html-stream
+          "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
+          (getf html-content :content))
   (reset-state))
 
 (defun cols (cols-list) 
@@ -94,9 +111,8 @@
 
 
 
-
-(defun example () 
-  (make-files 
+(defun example-strings () 
+  (write-strings
    (cols 
     (list 
      (rows 
@@ -107,3 +123,19 @@
 	 :styles "background-color: #f00;")
 	(:content "Test div again")
 	(:content "Test div three")))))))
+
+
+(defun example-files () 
+  (write-files 
+   (cols 
+    (list 
+     (rows 
+      '((:content "Test div please ignore")
+	(:content "Second test div")))
+     (rows 
+      '((:content "Test div again"
+	 :styles "background-color: #f00;")
+	(:content "Test div again")
+	(:content "Test div three")))))
+   :css-file "test.css"
+   :html-file "test.html"))
