@@ -27,7 +27,7 @@ The property `styles` is optional. Here you can insert a few lines of CSS specif
 ### rows and cols organize divs
 
 The `ROWS` and `COLS` functions do all of the work in Spew. These each take as an argument a single list of plists 
-(in other words, a list of divs) and return a list of div plists as well. The `ROWS` function will organize its 
+(in other words, a list of divs) and return a div plist. The `ROWS` function will organize its 
 divs in rows (each div will be a separate row) while the `COLS` function organizes them into columns. 
 
     (rows 
@@ -54,10 +54,12 @@ evaluate to the same kind of data as their arguments, they can be passed into ea
           
 This example organizes the web page into two columns, each containing several rows of divs. 
 
-### make-files 
+### write-strings and write-files
 
-To generate the HTML and CSS, pass the call to `ROWS` or `COLS` to the function `MAKE-FILES`. For an example, please see the 
-function `EXAMPLE` at the bottom of `spew.lisp`. 
+To generate the HTML and CSS, pass the call to `ROWS` or `COLS` to the function `WRITE-FILES`. For an example, please see the 
+function `EXAMPLE-FILES` at the bottom of `spew.lisp`. 
+
+You can also generate strings instead of writing to a file by calling `WRITE-STRINGS` instead. 
 
 ## Notes
 
