@@ -1,6 +1,8 @@
-(defpackage :spew 
-  (:use :cl))
-(in-package :spew)
+;;;; spew.lisp
+
+(in-package #:spew)
+
+;;; "spew" goes here. Hacks and glory await!
 
 (defparameter *col-id* 0)
 (defparameter *row-id* 0)
@@ -57,9 +59,9 @@
 
 (defun write-output (html-content &key css-stream html-stream)
   (format css-stream "~{~a~%~}" *running-css*)
-  (format html-stream
-          "<html><head><link href='test.css' rel='stylesheet' type='text/css'></head><body>~a</body></html>"
-          (getf html-content :content))
+  (cl-who:with-html-output (html-stream nil)
+    (cl-who:htm (:html (:head (:link :href "test.css" :rel "stylesheet" :type "text/css"))
+		       (:body (cl-who:str (getf html-content :content))))))
   (reset-state))
 
 (defun cols (cols-list) 
@@ -90,12 +92,14 @@
 	   #'simple-div-html
 	   cols-list)))
 
-(defun rows-html (rows-list) 
-  (format nil "<div id='row-container-~a'>~%~{~a~%~}</div>" 
-	  (rows-identifier)
-	  (mapcar 
-	   #'simple-div-html 
-	   rows-list)))
+(defun rows-html (rows-list)
+  (cl-who:with-html-output-to-string (s)
+    (let ((t-rows-list (mapcar #'simple-div-html rows-list)))
+      (cl-who:htm (:div :id (cl-who:conc "row-container-" (format nil "~a" (rows-identifier))) 
+			(dolist (r t-rows-list)
+			  (cl-who:htm (cl-who:str r))))))
+    s))
+
 
 (defun cols-css (cols-list) 
   (format nil "#~a>div {~%float:left;box-sizing:border-box;~%border:1px solid #000;~%width: ~a%;~%}" 
